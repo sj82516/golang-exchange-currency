@@ -23,8 +23,7 @@ var _ = Describe("currency exchange", func() {
 	})
 
 	It("should get 0 if amount is 0", func(done Done) {
-		ch := make(chan ExchangeRateResult)
-		e.EXPECT().GetExchangeRate("US", "TW", ch).Do(func() {
+		e.EXPECT().GetExchangeRate("US", "TW", gomock.Any()).Do(func(from string, to string, ch chan<- ExchangeRateResult) {
 			ch <- ExchangeRateResult{
 				IsExists:     true,
 				ExchangeRate: 40,
@@ -67,7 +66,7 @@ var _ = Describe("currency exchange", func() {
 			close(ch)
 		})
 
-		req,_ := http.NewRequest("GET", "/exchange-currency", nil)
+		req, _ := http.NewRequest("GET", "/exchange-currency", nil)
 		query := req.URL.Query()
 		query.Add("from", "US")
 		query.Add("to", "TW")
@@ -84,7 +83,7 @@ var _ = Describe("currency exchange", func() {
 		handler.ServeHTTP(rr, req)
 		Expect(rr.Code).To(Equal(200))
 
-		var body struct{
+		var body struct {
 			Amount int
 		}
 		_ = json.Unmarshal(rr.Body.Bytes(), &body)
@@ -92,6 +91,5 @@ var _ = Describe("currency exchange", func() {
 
 		close(done)
 	})
-
 
 })
